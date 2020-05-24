@@ -14,11 +14,14 @@ def send_to_ml(data: str):
             with pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST)) as connection:
                 channel_send = connection.channel()
                 channel_send.queue_declare(queue=RABBITMQ_QUEUE)
+                channel_send.confirm_delivery()
 
                 channel_send.basic_publish(
                         exchange='',
                         routing_key=RABBITMQ_QUEUE,
-                        body=data
+                        body=data,
+                        properties=pika.BasicProperties(content_type='text/plain', delivery_mode=1),
+                        mandatory=True
                 )
                 break
         except pika.exceptions.AMQPConnectionError as e:
