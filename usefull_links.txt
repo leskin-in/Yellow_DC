@@ -1,0 +1,6 @@
+Create resource group: https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough
+Create registery for docker: https://docs.microsoft.com/en-us/azure/aks/cluster-container-registry-integration
+Simple ingress: https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-ingress-guide-nginx-example.html
+Add static ip: https://docs.microsoft.com/en-us/azure/aks/static-ip
+Mount disk: https://docs.microsoft.com/en-us/azure/aks/azure-disk-volume
+Mount azure file: https://docs.microsoft.com/en-us/azure/aks/azure-files-volume
