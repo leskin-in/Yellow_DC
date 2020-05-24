@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  web:
+    build: webserver
+    ports:
+      - "80:8000"
+    volumes:
+      - /tmp/media:/media
+  ml:
+    build: Morphing_API
+    volumes:
+      - /tmp/media:/media
+  rabbit:
+    image: rabbitmq

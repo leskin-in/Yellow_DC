@@ -3,6 +3,7 @@
 import pika
 import os
 import time
+import logging
 
 from morphing import face_to_fruits
 
@@ -21,21 +22,29 @@ def _prepare():
     global connection
     global channel_receive
 
-    if connection is not None:
-        return
+    logging.getLogger().setLevel('INFO')
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST))
+    while True:
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST))
+            break
+        except pika.exceptions.AMQPConnectionError as e:
+            logging.getLogger().exception(e)
+            logging.getLogger().info('Retrying in 3 seconds')
+            time.sleep(3)
+            continue
 
     channel_receive = connection.channel()
     channel_receive.queue_declare(queue=RABBITMQ_QUEUE)
 
 
 def _callback(channel, method, properties, body):
+    logging.getLogger().setLevel('INFO')
     path = body.decode('utf-8')
-    print('Received request for \'{}\''.format(path))
+    logging.getLogger().info('Received request for \'{}\''.format(path))
 
     if not os.path.isfile(path):
-        print('Not a file: \'{}\''.format(path))
+        logging.getLogger().warn('Not a file: \'{}\''.format(path))
         return
 
     resulting_path = path + '.proc' + os.path.splitext(path)[1]
@@ -43,7 +52,7 @@ def _callback(channel, method, properties, body):
     t_start = time.perf_counter()
     face_to_fruits(path, resulting_path)
     t_end = time.perf_counter()
-    print('Result is saved to \'{}\'. Elapsed: {:10.3f}'.format(resulting_path, t_end - t_start))
+    logging.getLogger().info('Result is saved to \'{}\'. Elapsed: {:10.3f}'.format(resulting_path, t_end - t_start))
 
 
 def main():

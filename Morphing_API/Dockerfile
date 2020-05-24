@@ -14,5 +14,5 @@ WORKDIR /app
 COPY . /app
 
 ENV FP_RABBITMQ_QUEUE images
-ENV FP_RABBITMQ_HOST localhost
+ENV FP_RABBITMQ_HOST rabbit
 CMD python3 ml_service.py
