@@ -1,58 +1,58 @@
 #!/usr/bin/env python3
 
 import pika
-from json import loads, dumps
-
-from datetime import datetime
+import os
+import time
 
 from morphing import face_to_fruits
 
 
-QUEUE_IMAGES = 'images'
-QUEUE_RESULT = 'result'
+RABBITMQ_QUEUE = os.environ['FP_RABBITMQ_QUEUE']
+RABBITMQ_HOST = os.environ['FP_RABBITMQ_HOST']
+
 
 connection = None
-channel_send = None
 channel_receive = None
-
 
 def _prepare():
     """
     Prepare pika connection
     """
     global connection
-    global channel_send
     global channel_receive
 
     if connection is not None:
         return
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST))
 
     channel_receive = connection.channel()
-    channel_receive.queue_declare(queue=QUEUE_IMAGES)
-
-    channel_send = connection.channel()
-    channel_send.queue_declare(queue=QUEUE_RESULT)
+    channel_receive.queue_declare(queue=RABBITMQ_QUEUE)
 
 
 def _callback(channel, method, properties, body):
-    r = loads(body.decode('utf-8'))
-    print("RECIEVED image #{} with path {}".format(r['id'], r['path']))
+    path = body.decode('utf-8')
+    print('Received request for \'{}\''.format(path))
 
-    resulting_path = "/tmp/{}_{}.{}".format(str(datetime.now()), r['id'], 'png')
-    face_to_fruits(r['path'], resulting_path)
+    if not os.path.isfile(path):
+        print('Not a file: \'{}\''.format(path))
+        return
 
-    channel_send.basic_publish(
-            exchange='',
-            routing_key=QUEUE_RESULT,
-            body=dumps({'id': r['id'], 'path': resulting_path})
-    )
-    print("SENT image #{} with path {}".format(r['id'], resulting_path))
+    resulting_path = path + '.proc' + os.path.splitext(path)[1]
+
+    t_start = time.perf_counter()
+    face_to_fruits(path, resulting_path)
+    t_end = time.perf_counter()
+    print('Result is saved to \'{}\'. Elapsed: {:10.3f}'.format(resulting_path, t_end - t_start))
 
 
-_prepare()
+def main():
+    global channel_receive
 
-channel_receive.basic_consume(QUEUE_IMAGES, _callback, auto_ack=True)
+    _prepare()
+    channel_receive.basic_consume(RABBITMQ_QUEUE, _callback, auto_ack=True)
+    channel_receive.start_consuming()
 
-channel_receive.start_consuming()
+
+if __name__ == '__main__':
+    main()

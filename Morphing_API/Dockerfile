@@ -1,16 +1,18 @@
-# Use an official Python runtime as a parent image
 FROM python:3.7.2
 
-# Set the working directory to /app
-WORKDIR /app
-
-# Copy the current directory contents into the container at /app
-COPY . /app
-COPY ../requirements.txt /app
-
-# Install any needed packages specified in requirements.txt
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install \
+    matplotlib \
+    numpy \
+    pika \
+    scikit-image \
+    torch==1.1.0 \
+    torchvision==0.3.0 \
+    yacs
 
-# Run app.py when the container launches
-CMD ["./run_ml.sh"]
+WORKDIR /app
+COPY . /app
+
+ENV FP_RABBITMQ_QUEUE images
+ENV FP_RABBITMQ_HOST localhost
+CMD python3 ml_service.py

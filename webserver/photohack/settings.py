@@ -15,8 +15,12 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = os.path.join(os.environ['FP_MEDIA'])
 
+
+# Shared with ML service
+RABBITMQ_QUEUE = os.environ['FP_RABBITMQ_QUEUE']
+RABBITMQ_HOST = os.environ['FP_RABBITMQ_HOST']
 
 
 # Quick-start development settings - unsuitable for production
@@ -34,8 +38,6 @@ ALLOWED_HOSTS = '*'
 # Application definition
 
 INSTALLED_APPS = [
-    'rest_framework',
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
